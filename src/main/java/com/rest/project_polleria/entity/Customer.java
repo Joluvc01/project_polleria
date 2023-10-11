@@ -6,17 +6,17 @@ import lombok.*;
 
 import java.util.HashSet;
 import java.util.*;
-
+/*
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Getter
 @Setter
 
 @Entity
 @Table(name = "customer")
 public class Customer {
+
 
     private UUID id;
     private String name;
@@ -28,3 +28,4 @@ public class Customer {
     private Set<Order> orders = new HashSet<>(); //many to one relationship with Order>
 
 }
+*/

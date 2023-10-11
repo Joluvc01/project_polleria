@@ -1,5 +1,5 @@
 package com.rest.project_polleria.entity;
-
+/*
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,3 +19,4 @@ public class Order_Detail {
     @JoinColumn(name = "producto_id")
     private Product product;
 }
+*/
