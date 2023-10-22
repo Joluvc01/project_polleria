@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,11 +26,18 @@ public class ProductServiceImpl implements ProductService{
         return productRepository.findById(id);
     }
     @Override
-    public Page<Product> findByCategoryId(UUID categoryId, Pageable pageable) { return productRepository.findByCategoryId(categoryId, pageable);}
+    public Page<Product> findByCategoryName(String categoryName, Pageable pageable) { return productRepository.findByCategoryName(categoryName, pageable);}
+
     @Override
-    public Product save(Product product) {
+    public Iterable<Product> saveAll(List<Product> products) {
+        return productRepository.saveAll(products);
+    }
+
+    @Override
+    public Product update(Product product) {
         return productRepository.save(product);
     }
+
     @Override
     public void deleteById(UUID id) {
         productRepository.deleteById(id);

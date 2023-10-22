@@ -3,6 +3,7 @@ package com.rest.project_polleria.controller;
 import com.rest.project_polleria.dto.ProductDTO;
 import com.rest.project_polleria.entity.Category;
 import com.rest.project_polleria.entity.Product;
+import com.rest.project_polleria.service.CategoryService;
 import com.rest.project_polleria.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,14 +25,38 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+    @Autowired
+    private CategoryService categoryService;
 
     @GetMapping()
-    public ResponseEntity<Page<Product>> findAll(Pageable pageable){
+    public ResponseEntity<Page<ProductDTO>> findByCategoryName(@RequestParam(required = false) String categoryName, Pageable pageable) {
         // Verificar si no se ha especificado ninguna ordenación y establecer la predeterminada
         if (pageable.getSort().isEmpty()) {
             pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
         }
-        return ResponseEntity.ok(productService.findAll(pageable));
+
+        Page<Product> productsPage;
+
+        if (categoryName != null && !categoryName.isEmpty()) {
+            productsPage = productService.findByCategoryName(categoryName, pageable);
+        } else {
+            productsPage = productService.findAll(pageable);
+        }
+
+        // Mapear Product a ProductDTO con nombre de categoría
+        Page<ProductDTO> productDTOs = productsPage.map(product -> {
+            String category = product.getCategory() != null ? product.getCategory().getName() : null;
+            return new ProductDTO(
+                    product.getName(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getStock(),
+                    product.getImage(),
+                    category
+            );
+        });
+
+        return ResponseEntity.ok(productDTOs);
     }
 
     @GetMapping("/{id}")
@@ -39,33 +66,39 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<Product>> findByCategoryId(@PathVariable UUID categoryId, Pageable pageable){
-        // Verificar si no se ha especificado ninguna ordenación y establecer la predeterminada
-        if (pageable.getSort().isEmpty()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
-        }
-        return ResponseEntity.ok(productService.findByCategoryId(categoryId, pageable));
-
-    }
-
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody ProductDTO productDTO) {
-        // Convierte ProductDTO a Product
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setDescription(productDTO.getDescription());
-        product.setPrice(productDTO.getPrice());
-        product.setStock(productDTO.getStock());
-        product.setImage(productDTO.getImage());
-        product.setCategory(productDTO.getCategory());
+    public ResponseEntity<?> create(@RequestBody List<ProductDTO> productDTOList) {
+        List<Product> products = new ArrayList<>();
 
-        // Guarda el producto en la base de datos
-        productService.save(product);
+        // Convierte cada ProductDTO a Product y agrégalo a la lista de productos
+        for (ProductDTO productDTO : productDTOList) {
+            Product product = new Product();
+            product.setName(productDTO.getName());
+            product.setDescription(productDTO.getDescription());
+            product.setPrice(productDTO.getPrice());
+            product.setStock(productDTO.getStock());
+            product.setImage(productDTO.getImage());
+            products.add(product);
+            // Buscar la categoría por nombre en la base de datos
+            Category category = categoryService.findByName(productDTO.getCategoryName());
 
-        // Devuelve la respuesta con el producto creado
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+            if (category == null) {
+                // Manejar el caso en el que la categoría no existe
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("La categoría no existe");
+            }
+
+            product.setCategory(category);
+        }
+
+        // Guarda los productos en la base de datos
+        productService.saveAll(products);
+
+
+
+        // Devuelve la respuesta con la lista de productos creados
+        return ResponseEntity.status(HttpStatus.CREATED).body(products);
     }
+
 
     @PutMapping("/update/{productId}")
     public ResponseEntity<?> update(@PathVariable UUID productId, @RequestBody ProductDTO productDTO) {
@@ -81,17 +114,27 @@ public class ProductController {
             existingProduct.setPrice(productDTO.getPrice());
             existingProduct.setStock(productDTO.getStock());
             existingProduct.setImage(productDTO.getImage());
-            existingProduct.setCategory(productDTO.getCategory());
 
-            // Guarda el producto actualizado en la base de datos
-            Product updatedProduct = productService.save(existingProduct);
+            // Busca la categoría por nombre
+            Category category = categoryService.findByName(productDTO.getCategoryName());
 
-            // Devuelve la respuesta con el producto actualizado
-            return ResponseEntity.ok(updatedProduct);
+            if (category != null) {
+                // Establece la categoría en el producto
+                existingProduct.setCategory(category);
+
+                // Guarda el producto actualizado en la base de datos
+                Product updatedProduct = productService.update(existingProduct);
+
+                // Devuelve la respuesta con el producto actualizado
+                return ResponseEntity.ok(updatedProduct);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Categoría no encontrada: " + productDTO.getCategoryName());
+            }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado con ID: " + productId);
         }
     }
+
 
     @DeleteMapping("/delete/{productId}")
     public ResponseEntity<?> deleteProducto(@PathVariable UUID productId) {
