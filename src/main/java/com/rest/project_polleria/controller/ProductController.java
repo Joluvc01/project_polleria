@@ -1,11 +1,14 @@
 package com.rest.project_polleria.controller;
 
 import com.rest.project_polleria.dto.ProductDTO;
+import com.rest.project_polleria.entity.Category;
 import com.rest.project_polleria.entity.Product;
 import com.rest.project_polleria.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,22 +17,36 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/products")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
 
     @GetMapping()
-    public ResponseEntity<Page<Product>> FindAll(Pageable pageable){
+    public ResponseEntity<Page<Product>> findAll(Pageable pageable){
+        // Verificar si no se ha especificado ninguna ordenación y establecer la predeterminada
+        if (pageable.getSort().isEmpty()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
+        }
         return ResponseEntity.ok(productService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> FindById(@PathVariable UUID id){
+    public ResponseEntity<?> findById(@PathVariable UUID id){
         return productService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<Page<Product>> findByCategoryId(@PathVariable UUID categoryId, Pageable pageable){
+        // Verificar si no se ha especificado ninguna ordenación y establecer la predeterminada
+        if (pageable.getSort().isEmpty()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
+        }
+        return ResponseEntity.ok(productService.findByCategoryId(categoryId, pageable));
+
     }
 
     @PostMapping("/create")
@@ -42,13 +59,12 @@ public class ProductController {
         product.setStock(productDTO.getStock());
         product.setImage(productDTO.getImage());
         product.setCategory(productDTO.getCategory());
-        // Puedes establecer otros atributos según sea necesario
 
         // Guarda el producto en la base de datos
-        Product savedProduct = productService.save(product);
+        productService.save(product);
 
         // Devuelve la respuesta con el producto creado
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body(product);
     }
 
     @PutMapping("/update/{productId}")
@@ -66,7 +82,6 @@ public class ProductController {
             existingProduct.setStock(productDTO.getStock());
             existingProduct.setImage(productDTO.getImage());
             existingProduct.setCategory(productDTO.getCategory());
-            // Puedes actualizar otros atributos según sea necesario
 
             // Guarda el producto actualizado en la base de datos
             Product updatedProduct = productService.save(existingProduct);
@@ -78,10 +93,20 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteProducto(@PathVariable UUID id) {
-        productService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/delete/{productId}")
+    public ResponseEntity<?> deleteProducto(@PathVariable UUID productId) {
+        // Verifica si la categoria con el ID especificado existe en la base de datos
+        Optional<Product> optionalProduct = productService.findById(productId);
+
+        if (optionalProduct.isPresent()) {
+            // Elimina la categoria con el ID especificado
+            productService.deleteById(productId);
+
+            // Devuelve la respuesta con el mensaje de eliminación exitosa
+            return ResponseEntity.ok("Categoria eliminada con ID: " + productId);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrada con ID: " + productId);
+        }
     }
 
 }
