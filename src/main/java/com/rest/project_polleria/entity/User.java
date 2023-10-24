@@ -28,8 +28,4 @@ public class User {
     @NotNull
     @Size(max = 50)
     private String password;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role role;
 }

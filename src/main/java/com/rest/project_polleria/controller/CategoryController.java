@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,19 +33,25 @@ public class CategoryController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody CategoryDTO categoryDTO) {
-        // Convierte CategoryDTO a Category
-        Category category = new Category();
-        category.setName(categoryDTO.getName());
-        category.setDescription(categoryDTO.getDescription());
-        category.setImage(categoryDTO.getImage());
+    public ResponseEntity<?> create(@RequestBody List<CategoryDTO> categoryDTOList) {
+        List<Category> categories = new ArrayList<>();
 
-        //Guarda la categoria en la base de datos
-        categoryService.save(category);
+        // Convierte cada CategoryDTO a Category y agrégalos a la lista
+        for (CategoryDTO categoryDTO : categoryDTOList) {
+            Category category = new Category();
+            category.setName(categoryDTO.getName());
+            category.setDescription(categoryDTO.getDescription());
+            category.setImage(categoryDTO.getImage());
+            categories.add(category);
+        }
 
-        // Devuelve la respuesta con el producto creado
-        return ResponseEntity.status(HttpStatus.CREATED).body(category);
+        // Guarda las categorías en la base de datos
+        categoryService.saveAll(categories);
+
+        // Devuelve la respuesta con las categorías creadas
+        return ResponseEntity.status(HttpStatus.CREATED).body(categories);
     }
+
 
     @PutMapping("/update/{categoryId}")
     public ResponseEntity<?> update(@PathVariable UUID categoryId, @RequestBody CategoryDTO categoryDTO) {

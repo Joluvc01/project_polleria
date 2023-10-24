@@ -47,6 +47,7 @@ public class ProductController {
         Page<ProductDTO> productDTOs = productsPage.map(product -> {
             String category = product.getCategory() != null ? product.getCategory().getName() : null;
             return new ProductDTO(
+                    product.getId(),
                     product.getName(),
                     product.getDescription(),
                     product.getPrice(),
@@ -80,7 +81,7 @@ public class ProductController {
             product.setImage(productDTO.getImage());
             products.add(product);
             // Buscar la categoría por nombre en la base de datos
-            Category category = categoryService.findByName(productDTO.getCategoryName());
+            Category category = categoryService.findByName(productDTO.getCategory());
 
             if (category == null) {
                 // Manejar el caso en el que la categoría no existe
@@ -92,8 +93,6 @@ public class ProductController {
 
         // Guarda los productos en la base de datos
         productService.saveAll(products);
-
-
 
         // Devuelve la respuesta con la lista de productos creados
         return ResponseEntity.status(HttpStatus.CREATED).body(products);
@@ -116,7 +115,7 @@ public class ProductController {
             existingProduct.setImage(productDTO.getImage());
 
             // Busca la categoría por nombre
-            Category category = categoryService.findByName(productDTO.getCategoryName());
+            Category category = categoryService.findByName(productDTO.getCategory());
 
             if (category != null) {
                 // Establece la categoría en el producto
@@ -128,7 +127,7 @@ public class ProductController {
                 // Devuelve la respuesta con el producto actualizado
                 return ResponseEntity.ok(updatedProduct);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Categoría no encontrada: " + productDTO.getCategoryName());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Categoría no encontrada: " + productDTO.getCategory());
             }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Producto no encontrado con ID: " + productId);

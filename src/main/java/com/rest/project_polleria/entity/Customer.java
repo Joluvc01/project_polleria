@@ -25,7 +25,5 @@ public class Customer {
     private String address;
     private String password;
     private String photo;
-    private Set<Order> orders = new HashSet<>(); //many to one relationship with Order>
-
 }
 */
