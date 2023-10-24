@@ -3,6 +3,7 @@ package com.rest.project_polleria.controller;
 import com.rest.project_polleria.dto.CategoryDTO;
 import com.rest.project_polleria.entity.Category;
 import com.rest.project_polleria.repository.CategoryRepository;
+import com.rest.project_polleria.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class CategoryController {
 
     @Autowired
-    private CategoryRepository categoryService;
+    private CategoryService categoryService;
 
     @GetMapping()
     public ResponseEntity<?> findAll(){

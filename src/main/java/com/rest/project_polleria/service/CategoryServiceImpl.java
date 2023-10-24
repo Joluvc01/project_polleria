@@ -19,6 +19,9 @@ public class CategoryServiceImpl implements CategoryService{
     public List<Category> findAll() { return categoryRepository.findAll();}
     @Override
     public Category findByName(String name) { return categoryRepository.findByName(name);}
+
+    @Override
+    public Iterable<Category> saveAll(List<Category> categories) { return categoryRepository.saveAll(categories);}
     @Override
     public Optional<Category> findById(UUID id) { return categoryRepository.findById(id);}
     @Override

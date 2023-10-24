@@ -11,8 +11,15 @@ import java.util.UUID;
 @Service
 public interface CategoryService {
     public List<Category> findAll();
+
     public Category findByName(String name);
+
+    public Iterable<Category> saveAll(List<Category> categories);
+
     public Optional<Category> findById(UUID id);
+
     public Category save(Category category);
+
     public void deleteById(UUID id);
 }
+

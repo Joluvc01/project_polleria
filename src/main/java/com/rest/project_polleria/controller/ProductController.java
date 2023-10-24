@@ -7,9 +7,7 @@ import com.rest.project_polleria.service.CategoryService;
 import com.rest.project_polleria.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,10 +28,6 @@ public class ProductController {
 
     @GetMapping()
     public ResponseEntity<Page<ProductDTO>> findByCategoryName(@RequestParam(required = false) String categoryName, Pageable pageable) {
-        // Verificar si no se ha especificado ninguna ordenación y establecer la predeterminada
-        if (pageable.getSort().isEmpty()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
-        }
 
         Page<Product> productsPage;
 
