@@ -27,5 +27,9 @@ public class User {
 
     @NotNull
     @Size(max = 50)
+    private String fullname;
+
+    @NotNull
+    @Size(max = 50)
     private String password;
 }
